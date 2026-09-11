@@ -1,8 +1,34 @@
-#include <QCoreApplication>
+#include "funciones.h"
+#include <ctime>
 
-int main(int argc, char *argv[])
+int main()
 {
-    QCoreApplication a(argc, argv);
+    srand(time(NULL));
 
-    return a.exec();
+    int filas = 4;
+    int cols = 4;
+    size_t bytes_reservados = 0;
+
+    unsigned char* tablero = crear_tablero(filas, cols, bytes_reservados);
+    inicializar_tablero_aleatorio(tablero, filas, cols);
+
+    std::cout << "Bytes reservados: " << bytes_reservados << "\n\n";
+
+    // Mostrar el tablero leído bit a bit
+    std::cout << "Tablero inicial:\n";
+    for (int f = 0; f < filas; ++f) {
+        for (int c = 0; c < cols; ++c) {
+            int valor = obtener_ficha(tablero, f, c, cols);
+            std::cout << valor << " ";
+        }
+        std::cout << "\n";
+    }
+
+    // Modificar una casilla específica (ejemplo: poner la ficha 5 en la fila 1, columna 2)
+    fijar_ficha(tablero, 1, 2, cols, 5);
+
+    std::cout << "\nValor modificado en (1, 2): " << (int)obtener_ficha(tablero, 1, 2, cols) << "\n";
+
+    delete[] tablero;
+    return 0;
 }
