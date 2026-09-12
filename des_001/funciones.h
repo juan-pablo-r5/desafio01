@@ -30,6 +30,6 @@ unsigned char* agregar_linea(unsigned char* tablero, int& filas, int& cols, size
 // Elimina una fila o columna y evalúa la regla del 65% para liberar/redimensionar memoria física
 unsigned char* eliminar_linea(unsigned char* tablero, int& filas, int& cols, size_t& bytes_reservados, int pos, bool es_fila);
 
-
+void imprimir_tira_binaria(const unsigned char* tablero, size_t bytes_reservados, int filas, int cols);
 
 #endif // FUNCIONES_H
