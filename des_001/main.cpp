@@ -31,6 +31,41 @@ int main()
 
     cout << "\nValor modificado en (1, 2): " << (int)obtener_ficha(tablero, 1, 2, cols) << "\n";
 
+//Agrego codigo de caida de las fichas y reemplazo de los espacios disponibles
+
+    fijar_ficha(tablero, 1, 1, cols, 7);
+    fijar_ficha(tablero, 2, 1, cols, 7);
+
+    cout << "\nTablero tras romper fichas (f1,c1 y f2,c1 quedan con valor 7):\n";
+    for (int f = 0; f < filas; ++f) {
+        for (int c = 0; c < cols; ++c) {
+            cout << (int)obtener_ficha(tablero, f, c, cols) << " ";
+        }
+        cout << "\n";
+    }
+
+//Aplicamos el algoritmo de gravedad y de relleno
+
+    aplicar_gravedad(tablero, filas, cols);
+
+    cout << "\nTablero tras aplicar gravedad:\n";
+    for (int f = 0; f < filas; ++f) {
+        for (int c = 0; c < cols; ++c) {
+            cout << (int)obtener_ficha(tablero, f, c, cols) << " ";
+        }
+        cout << "\n";
+    }
+
+    rellenar_fichas_superiores(tablero, filas, cols);
+
+    cout << "\nTablero final completamente rellenado:\n";
+    for (int f = 0; f < filas; ++f) {
+        for (int c = 0; c < cols; ++c) {
+            cout << (int)obtener_ficha(tablero, f, c, cols) << " ";
+        }
+        cout << "\n";
+    }
+
     delete[] tablero;
     return 0;
 }

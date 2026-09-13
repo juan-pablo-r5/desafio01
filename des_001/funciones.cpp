@@ -72,3 +72,41 @@ void inicializar_tablero_aleatorio(unsigned char* tablero, int filas, int cols) 
         }
     }
 }
+
+//Caida de fichas y generacion de las nuevas
+
+void aplicar_gravedad(unsigned char* tablero, int filas, int cols) {
+    unsigned char CASILLA_VACIA = 7;
+
+
+    for (int c = 0; c < cols; ++c) {
+        int posicion_vacia = -1;
+        for (int f = filas - 1; f >= 0; --f) {
+            unsigned char ficha_actual = obtener_ficha(tablero, f, c, cols);
+
+            if (ficha_actual == CASILLA_VACIA) {
+                if (posicion_vacia == -1) {
+                    posicion_vacia = f;
+                }
+            } else if (posicion_vacia != -1) {
+                unsigned char ficha_a_mover = obtener_ficha(tablero, f, c, cols);
+                fijar_ficha(tablero, posicion_vacia, c, cols, ficha_a_mover);
+                fijar_ficha(tablero, f, c, cols, CASILLA_VACIA);
+                posicion_vacia--;
+            }
+        }
+    }
+}
+
+void rellenar_fichas_superiores(unsigned char* tablero, int filas, int cols) {
+    unsigned char casilla_vacia = 7;
+
+    for (int c = 0; c < cols; ++c) {
+        for (int f = filas - 1; f >= 0; --f) {
+            if (obtener_ficha(tablero, f, c, cols) == casilla_vacia) {
+                unsigned char nueva_ficha = rand() % 6;
+                fijar_ficha(tablero, f, c, cols, nueva_ficha);
+            }
+        }
+    }
+}

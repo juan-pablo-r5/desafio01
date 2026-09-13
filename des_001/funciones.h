@@ -1,7 +1,7 @@
 #ifndef FUNCIONES_H
 #define FUNCIONES_H
 
-#include<iostream>
+#include <iostream>
 using namespace std;
 
 
@@ -30,6 +30,12 @@ unsigned char* agregar_linea(unsigned char* tablero, int& filas, int& cols, size
 // Elimina una fila o columna y evalúa la regla del 65% para liberar/redimensionar memoria física
 unsigned char* eliminar_linea(unsigned char* tablero, int& filas, int& cols, size_t& bytes_reservados, int pos, bool es_fila);
 
+// CAIDA Y REEMPLAZO
 
+// Desplaza las fichas hacia abajo si hay espacios vacíos
+void aplicar_gravedad(unsigned char* tablero, int filas, int cols);
+
+// Llena los huecos superiores que quedaron vacíos tras la caída con fichas nuevas
+void rellenar_fichas_superiores(unsigned char* tablero, int filas, int cols);
 
 #endif // FUNCIONES_H
