@@ -179,3 +179,118 @@ void imprimir_tira_binaria(const unsigned char* tablero, size_t bytes_reservados
     }
     std::cout << "\n\n";
 }
+
+// --- DETECCIÓN DE COMBINACIONES (3 O MÁS IGUALES) ---
+bool detectar_y_marcar_combinaciones(const unsigned char* tablero, int filas, int cols, bool* eliminados) {
+    bool hay_combos = false;
+
+    // Escaneo Horizontal
+    for (int f = 0; f < filas; ++f) {
+        for (int c = 0; c < cols - 2; ++c) {
+            unsigned char v = obtener_ficha(tablero, f, c, cols);
+            if (v < 6 && v == obtener_ficha(tablero, f, c + 1, cols) && v == obtener_ficha(tablero, f, c + 2, cols)) {
+                int k = c;
+                while (k < cols && obtener_ficha(tablero, f, k, cols) == v) {
+                    eliminados[f * cols + k] = true;
+                    k++;
+                }
+                hay_combos = true;
+            }
+        }
+    }
+
+    // Escaneo Vertical
+    for (int c = 0; c < cols; ++c) {
+        for (int f = 0; f < filas - 2; ++f) {
+            unsigned char v = obtener_ficha(tablero, f, c, cols);
+            if (v < 6 && v == obtener_ficha(tablero, f + 1, c, cols) && v == obtener_ficha(tablero, f + 2, c, cols)) {
+                int k = f;
+                while (k < filas && obtener_ficha(tablero, k, c, cols) == v) {
+                    eliminados[k * cols + c] = true;
+                    k++;
+                }
+                hay_combos = true;
+            }
+        }
+    }
+
+    return hay_combos;
+}
+
+// --- GRAVEDAD Y REPOSICIÓN ---
+int aplicar_gravedad_y_relleno(unsigned char* tablero, int filas, int cols, const bool* eliminados) {
+    int eliminadas = 0;
+
+    for (int c = 0; c < cols; ++c) {
+        int pos_escribir = filas - 1;
+        for (int f = filas - 1; f >= 0; --f) {
+            if (!eliminados[f * cols + c]) {
+                fijar_ficha(tablero, pos_escribir, c, cols, obtener_ficha(tablero, f, c, cols));
+                pos_escribir--;
+            } else {
+                eliminadas++;
+            }
+        }
+        // Rellenar huecos superiores con nuevas fichas aleatorias (000 a 101)
+        while (pos_escribir >= 0) {
+            fijar_ficha(tablero, pos_escribir, c, cols, rand() % 6);
+            pos_escribir--;
+        }
+    }
+
+    return eliminadas;
+}
+
+// --- BUCLE AUTOMÁTICO DE CASCADAS ---
+void procesar_cascadas(unsigned char* tablero, int filas, int cols, int& puntaje, int& total_fichas_destruidas, int& combinaciones, int& cascadas) {
+    int nivel_cascada = 0;
+
+    while (true) {
+        bool* eliminados = new bool[filas * cols]();
+        bool hay_combos = detectar_y_marcar_combinaciones(tablero, filas, cols, eliminados);
+
+        if (!hay_combos) {
+            delete[] eliminados;
+            break;
+        }
+
+        nivel_cascada++;
+        combinaciones++;
+        if (nivel_cascada > 1) cascadas++;
+
+        int destruidas = aplicar_gravedad_y_relleno(tablero, filas, cols, eliminados);
+        total_fichas_destruidas += destruidas;
+        puntaje += (destruidas * 10 * nivel_cascada);
+
+        delete[] eliminados;
+    }
+}
+
+// --- ELIMINACIÓN MANUAL POR PARTE DEL JUGADOR ---
+void eliminar_ficha_usuario(unsigned char* tablero, int filas, int cols, int fila_sel, int col_sel, int& puntaje, int& total_fichas_destruidas, int& combinaciones, int& cascadas) {
+    bool* eliminados = new bool[filas * cols]();
+    eliminados[fila_sel * cols + col_sel] = true;
+
+    aplicar_gravedad_y_relleno(tablero, filas, cols, eliminados);
+    delete[] eliminados;
+
+    procesar_cascadas(tablero, filas, cols, puntaje, total_fichas_destruidas, combinaciones, cascadas);
+}
+
+
+void mostrar_tablero(const unsigned char* tablero, int filas, int cols) {
+    const char simbolos[] = {'A', 'B', 'C', 'D', 'E', 'F', ' ', '*'};
+    std::cout << "\n   ";
+    for (int c = 0; c < cols; ++c) std::cout << c << " ";
+    std::cout << "\n  +" << std::string(cols * 2, '-') << "+\n";
+
+    for (int f = 0; f < filas; ++f) {
+        std::cout << f << " |";
+        for (int c = 0; c < cols; ++c) {
+            unsigned char v = obtener_ficha(tablero, f, c, cols);
+            std::cout << simbolos[v] << " ";
+        }
+        std::cout << "|\n";
+    }
+    std::cout << "  +" << std::string(cols * 2, '-') << "+\n\n";
+}

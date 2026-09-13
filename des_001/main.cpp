@@ -10,6 +10,8 @@ void mostrar_matriz(const unsigned char* tablero, int filas, int cols) {
     }
     std::cout << "\n";
 }
+
+
 int main()
 {
     srand(time(NULL));
@@ -37,7 +39,7 @@ int main()
     fijar_ficha(tablero, 1, 2, cols, 5);
 
     std::cout << "\nValor modificado en (1, 2): " << (int)obtener_ficha(tablero, 1, 2, cols) << "\n";
-
+    mostrar_tablero(tablero, filas, cols);
 
 
     mostrar_matriz(tablero, filas, cols);
@@ -55,6 +57,87 @@ int main()
     mostrar_matriz(tablero, filas, cols);
     imprimir_tira_binaria(tablero, bytes_reservados, filas, cols);
 
+
+
+    // Métricas del juego
+    int puntaje = 0;
+    int eliminaciones_usuario = 0;
+    int total_fichas_destruidas = 0;
+    int combinaciones = 0;
+    int cascadas = 0;
+
+
+    // Limpiar combinaciones iniciales para arrancar con el tablero estable
+    procesar_cascadas(tablero, filas, cols, puntaje, total_fichas_destruidas, combinaciones, cascadas);
+    puntaje = 0; total_fichas_destruidas = 0; combinaciones = 0; cascadas = 0;
+
+    int opcion = 0;
+    while (opcion != 7) {
+        mostrar_tablero(tablero, filas, cols);
+        imprimir_tira_binaria(tablero, bytes_reservados, filas, cols);
+
+        std::cout << "--- SWEET CRUSH MENU ---\n";
+        std::cout << "1. Eliminar ficha (Fila, Columna)\n";
+        std::cout << "2. Agregar fila\n";
+        std::cout << "3. Eliminar fila\n";
+        std::cout << "4. Agregar columna\n";
+        std::cout << "5. Eliminar columna\n";
+        std::cout << "6. Ver estadisticas\n";
+        std::cout << "7. Salir\n";
+        std::cout << "Seleccione opcion: ";
+        std::cin >> opcion;
+
+        if (opcion == 1) {
+            int f, c;
+            std::cout << "Ingrese fila (0 a " << filas - 1 << ") y columna (0 a " << cols - 1 << "): ";
+            std::cin >> f >> c;
+            if (f >= 0 && f < filas && c >= 0 && c < cols) {
+                eliminaciones_usuario++;
+                eliminar_ficha_usuario(tablero, filas, cols, f, c, puntaje, total_fichas_destruidas, combinaciones, cascadas);
+            }
+        } else if (opcion == 2) {
+            int pos;
+            std::cout << "Ingrese posicion para insertar fila (0 a " << filas << "): ";
+            std::cin >> pos;
+            if (pos >= 0 && pos <= filas) {
+                tablero = agregar_linea(tablero, filas, cols, bytes_reservados, pos, true);
+                procesar_cascadas(tablero, filas, cols, puntaje, total_fichas_destruidas, combinaciones, cascadas);
+            }
+        } else if (opcion == 3 && filas > 1) {
+            int pos;
+            std::cout << "Ingrese posicion de fila a eliminar (0 a " << filas - 1 << "): ";
+            std::cin >> pos;
+            if (pos >= 0 && pos < filas) {
+                tablero = eliminar_linea(tablero, filas, cols, bytes_reservados, pos, true);
+                procesar_cascadas(tablero, filas, cols, puntaje, total_fichas_destruidas, combinaciones, cascadas);
+            }
+        } else if (opcion == 4) {
+            int pos;
+            std::cout << "Ingrese posicion para insertar columna (0 a " << cols << "): ";
+            std::cin >> pos;
+            if (pos >= 0 && pos <= cols) {
+                tablero = agregar_linea(tablero, filas, cols, bytes_reservados, pos, false);
+                procesar_cascadas(tablero, filas, cols, puntaje, total_fichas_destruidas, combinaciones, cascadas);
+            }
+        } else if (opcion == 5 && cols > 1) {
+            int pos;
+            std::cout << "Ingrese posicion de columna a eliminar (0 a " << cols - 1 << "): ";
+            std::cin >> pos;
+            if (pos >= 0 && pos < cols) {
+                tablero = eliminar_linea(tablero, filas, cols, bytes_reservados, pos, false);
+                procesar_cascadas(tablero, filas, cols, puntaje, total_fichas_destruidas, combinaciones, cascadas);
+            }
+        } else if (opcion == 6) {
+            std::cout << "\n=== ESTADISTICAS DEL JUEGO ===\n";
+            std::cout << "Dimensiones actuales: " << filas << "x" << cols << "\n";
+            std::cout << "Bytes fisicos reservados: " << bytes_reservados << "\n";
+            std::cout << "Eliminaciones del usuario: " << eliminaciones_usuario << "\n";
+            std::cout << "Total fichas destruidas: " << total_fichas_destruidas << "\n";
+            std::cout << "Combinaciones detectadas: " << combinaciones << "\n";
+            std::cout << "Cascadas producidas: " << cascadas << "\n";
+            std::cout << "Puntuacion total: " << puntaje << "\n\n";
+        }
+    }
 
     delete[] tablero;
     return 0;

@@ -32,4 +32,12 @@ unsigned char* eliminar_linea(unsigned char* tablero, int& filas, int& cols, siz
 
 void imprimir_tira_binaria(const unsigned char* tablero, size_t bytes_reservados, int filas, int cols);
 
+// --- NUEVAS FUNCIONES: MOTOR DE JUEGO Y CASCADAS ---
+bool detectar_y_marcar_combinaciones(const unsigned char* tablero, int filas, int cols, bool* eliminados);
+int aplicar_gravedad_y_relleno(unsigned char* tablero, int filas, int cols, const bool* eliminados);
+void procesar_cascadas(unsigned char* tablero, int filas, int cols, int& puntaje, int& total_fichas_destruidas, int& combinaciones, int& cascadas);
+void eliminar_ficha_usuario(unsigned char* tablero, int filas, int cols, int fila_sel, int col_sel, int& puntaje, int& total_fichas_destruidas, int& combinaciones, int& cascadas);
+
+void mostrar_tablero(const unsigned char* tablero, int filas, int cols);
+
 #endif // FUNCIONES_H
