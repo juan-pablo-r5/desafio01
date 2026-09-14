@@ -12,8 +12,8 @@ void mostrar_matriz(const unsigned char* tablero, int filas, int cols) {
 }
 
 
-int main()
-{
+int main(){
+
     srand(time(NULL));
 
     int filas = 4;
@@ -89,80 +89,81 @@ int main()
 
         switch(opcion) {
 
-            case 1: {
-                int f, c;
-                std::cout << "Ingrese fila (0 a " << filas - 1 << ") y columna (0 a " << cols - 1 << "): ";
-                std::cin >> f >> c;
-                if (f >= 0 && f < filas && c >= 0 && c < cols) {
-                    eliminaciones_usuario++;
-                    eliminar_ficha_usuario(tablero, filas, cols, f, c, puntaje, total_fichas_destruidas, combinaciones, cascadas);
-                }
-                break;
+        case 1: {
+            int f, c;
+            std::cout << "Ingrese fila (0 a " << filas - 1 << ") y columna (0 a " << cols - 1 << "): ";
+            std::cin >> f >> c;
+            if (f >= 0 && f < filas && c >= 0 && c < cols) {
+                eliminaciones_usuario++;
+                eliminar_ficha_usuario(tablero, filas, cols, f, c, puntaje, total_fichas_destruidas, combinaciones, cascadas);
             }
+            break;
+        }
 
-            case 2: {
-                int pos;
-                std::cout << "Ingrese posicion para insertar fila (0 a " << filas << "): ";
-                std::cin >> pos;
-                if (pos >= 0 && pos <= filas) {
-                    tablero = agregar_linea(tablero, filas, cols, bytes_reservados, pos, true);
-                    procesar_cascadas(tablero, filas, cols, puntaje, total_fichas_destruidas, combinaciones, cascadas);
-                }
-                break;
+        case 2: {
+            int pos;
+            std::cout << "Ingrese posicion para insertar fila (0 a " << filas << "): ";
+            std::cin >> pos;
+            if (pos >= 0 && pos <= filas) {
+                tablero = agregar_linea(tablero, filas, cols, bytes_reservados, pos, true);
+                procesar_cascadas(tablero, filas, cols, puntaje, total_fichas_destruidas, combinaciones, cascadas);
             }
+            break;
+        }
 
-            case 3: {
-                int pos;
-                std::cout << "Ingrese posicion de fila a eliminar (0 a " << filas - 1 << "): ";
-                std::cin >> pos;
-                if (pos >= 0 && pos < filas) {
-                    tablero = eliminar_linea(tablero, filas, cols, bytes_reservados, pos, true);
-                    procesar_cascadas(tablero, filas, cols, puntaje, total_fichas_destruidas, combinaciones, cascadas);
-                }
-                break;
+        case 3: {
+            int pos;
+            std::cout << "Ingrese posicion de fila a eliminar (0 a " << filas - 1 << "): ";
+            std::cin >> pos;
+            if (pos >= 0 && pos < filas) {
+                tablero = eliminar_linea(tablero, filas, cols, bytes_reservados, pos, true);
+                procesar_cascadas(tablero, filas, cols, puntaje, total_fichas_destruidas, combinaciones, cascadas);
             }
+            break;
+        }
 
-            case 4: {
-                int pos;
-                std::cout << "Ingrese posicion para insertar columna (0 a " << cols << "): ";
-                std::cin >> pos;
-                if (pos >= 0 && pos <= cols) {
-                    tablero = agregar_linea(tablero, filas, cols, bytes_reservados, pos, false);
-                    procesar_cascadas(tablero, filas, cols, puntaje, total_fichas_destruidas, combinaciones, cascadas);
-                }
-                break;
+        case 4: {
+            int pos;
+            std::cout << "Ingrese posicion para insertar columna (0 a " << cols << "): ";
+            std::cin >> pos;
+            if (pos >= 0 && pos <= cols) {
+                tablero = agregar_linea(tablero, filas, cols, bytes_reservados, pos, false);
+                procesar_cascadas(tablero, filas, cols, puntaje, total_fichas_destruidas, combinaciones, cascadas);
             }
+            break;
+        }
 
-            case 5: {
-                int pos;
-                std::cout << "Ingrese posicion de columna a eliminar (0 a " << cols - 1 << "): ";
-                std::cin >> pos;
-                if (pos >= 0 && pos < cols) {
-                    tablero = eliminar_linea(tablero, filas, cols, bytes_reservados, pos, false);
-                    procesar_cascadas(tablero, filas, cols, puntaje, total_fichas_destruidas, combinaciones, cascadas);
-                }
+        case 5: {
+            int pos;
+            std::cout << "Ingrese posicion de columna a eliminar (0 a " << cols - 1 << "): ";
+            std::cin >> pos;
+            if (pos >= 0 && pos < cols) {
+                tablero = eliminar_linea(tablero, filas, cols, bytes_reservados, pos, false);
+                procesar_cascadas(tablero, filas, cols, puntaje, total_fichas_destruidas, combinaciones, cascadas);
             }
+            break;
+        }
 
-            case 6: {
-                std::cout << "\n=== ESTADISTICAS DEL JUEGO ===\n";
-                std::cout << "Dimensiones actuales: " << filas << "x" << cols << "\n";
-                std::cout << "Bytes fisicos reservados: " << bytes_reservados << "\n";
-                std::cout << "Eliminaciones del usuario: " << eliminaciones_usuario << "\n";
-                std::cout << "Total fichas destruidas: " << total_fichas_destruidas << "\n";
-                std::cout << "Combinaciones detectadas: " << combinaciones << "\n";
-                std::cout << "Cascadas producidas: " << cascadas << "\n";
-                std::cout << "Puntuacion total: " << puntaje << "\n\n";
-                break;
-            }
+        case 6: {
+            std::cout << "\n=== ESTADISTICAS DEL JUEGO ===\n";
+            std::cout << "Dimensiones actuales: " << filas << "x" << cols << "\n";
+            std::cout << "Bytes fisicos reservados: " << bytes_reservados << "\n";
+            std::cout << "Eliminaciones del usuario: " << eliminaciones_usuario << "\n";
+            std::cout << "Total fichas destruidas: " << total_fichas_destruidas << "\n";
+            std::cout << "Combinaciones detectadas: " << combinaciones << "\n";
+            std::cout << "Cascadas producidas: " << cascadas << "\n";
+            std::cout << "Puntuacion total: " << puntaje << "\n\n";
+            break;
+        }
 
-            case 7: {
-                std::cout << "Saliendo del juego...\n";
-                break;
-            }
+        case 7: {
+            std::cout << "Gracias por jugar!!!\n";
+            break;
+        }
 
         }
 
-    delete[] tablero;
-    return 0;
+        delete[] tablero;
+        return 0;
     }
 }
