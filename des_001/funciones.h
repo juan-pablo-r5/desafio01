@@ -1,7 +1,7 @@
 #ifndef FUNCIONES_H
 #define FUNCIONES_H
 
-#include <iostream>
+#include<iostream>
 using namespace std;
 
 
@@ -30,12 +30,14 @@ unsigned char* agregar_linea(unsigned char* tablero, int& filas, int& cols, size
 // Elimina una fila o columna y evalúa la regla del 65% para liberar/redimensionar memoria física
 unsigned char* eliminar_linea(unsigned char* tablero, int& filas, int& cols, size_t& bytes_reservados, int pos, bool es_fila);
 
-// CAIDA Y REEMPLAZO
+void imprimir_tira_binaria(const unsigned char* tablero, size_t bytes_reservados, int filas, int cols);
 
-// Desplaza las fichas hacia abajo si hay espacios vacíos
-void aplicar_gravedad(unsigned char* tablero, int filas, int cols);
+// --- NUEVAS FUNCIONES: MOTOR DE JUEGO Y CASCADAS ---
+bool detectar_y_marcar_combinaciones(const unsigned char* tablero, int filas, int cols, bool* eliminados);
+int aplicar_gravedad_y_relleno(unsigned char* tablero, int filas, int cols, const bool* eliminados);
+void procesar_cascadas(unsigned char* tablero, int filas, int cols, int& puntaje, int& total_fichas_destruidas, int& combinaciones, int& cascadas);
+void eliminar_ficha_usuario(unsigned char* tablero, int filas, int cols, int fila_sel, int col_sel, int& puntaje, int& total_fichas_destruidas, int& combinaciones, int& cascadas);
 
-// Llena los huecos superiores que quedaron vacíos tras la caída con fichas nuevas
-void rellenar_fichas_superiores(unsigned char* tablero, int filas, int cols);
+void mostrar_tablero(const unsigned char* tablero, int filas, int cols);
 
 #endif // FUNCIONES_H

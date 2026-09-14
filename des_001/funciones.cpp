@@ -73,40 +73,242 @@ void inicializar_tablero_aleatorio(unsigned char* tablero, int filas, int cols) 
     }
 }
 
-//Caida de fichas y generacion de las nuevas
 
-void aplicar_gravedad(unsigned char* tablero, int filas, int cols) {
-    unsigned char CASILLA_VACIA = 7;
+// --- ELIMINAR FILA O COLUMNA (REGLA DEL 65%) ---
+unsigned char* eliminar_linea(unsigned char* tablero, int& filas, int& cols, size_t& bytes_reservados, int pos, bool es_fila) {
+    int nuevas_filas = es_fila ? filas - 1 : filas;
+    int nuevas_cols = es_fila ? cols : cols - 1;
 
+    size_t bits_nuevos = nuevas_filas * nuevas_cols * 3;
+    size_t bytes_nuevos = (bits_nuevos + 7) / 8; // Memoria mínima exacta requerida
 
-    for (int c = 0; c < cols; ++c) {
-        int posicion_vacia = -1;
-        for (int f = filas - 1; f >= 0; --f) {
-            unsigned char ficha_actual = obtener_ficha(tablero, f, c, cols);
+    // Tablero temporal para empaquetar las fichas que se conservan
+    unsigned char* temp = new unsigned char[bytes_nuevos]();
 
-            if (ficha_actual == CASILLA_VACIA) {
-                if (posicion_vacia == -1) {
-                    posicion_vacia = f;
-                }
-            } else if (posicion_vacia != -1) {
-                unsigned char ficha_a_mover = obtener_ficha(tablero, f, c, cols);
-                fijar_ficha(tablero, posicion_vacia, c, cols, ficha_a_mover);
-                fijar_ficha(tablero, f, c, cols, CASILLA_VACIA);
-                posicion_vacia--;
+    // Copiar fichas ignorando la fila o columna eliminada
+    for (int f = 0; f < nuevas_filas; ++f) {
+        for (int c = 0; c < nuevas_cols; ++c) {
+            int orig_f = (es_fila && f >= pos) ? f + 1 : f;
+            int orig_c = (!es_fila && c >= pos) ? c + 1 : c;
+
+            unsigned char ficha = obtener_ficha(tablero, orig_f, orig_c, cols);
+            fijar_ficha(temp, f, c, nuevas_cols, ficha);
+        }
+    }
+
+    // Evaluar la regla del 65% respecto a la memoria reservada actual
+    double porcentaje_uso = ((double)bytes_nuevos / bytes_reservados) * 100.0;
+
+    unsigned char* resultado = tablero;
+
+    if (porcentaje_uso < 65.0) {
+        // La ocupación cayó por debajo del 65%: Reasignar a un bloque más pequeño
+        delete[] tablero;
+        resultado = temp;
+        bytes_reservados = bytes_nuevos;
+    } else {
+        // La ocupación es >= 65%: Mantener la memoria física existente
+        // Copiar los datos empaquetados al bloque original y limpiar sobrante
+        for (size_t i = 0; i < bytes_reservados; ++i) {
+            tablero[i] = (i < bytes_nuevos) ? temp[i] : 0;
+        }
+        delete[] temp;
+    }
+
+    filas = nuevas_filas;
+    cols = nuevas_cols;
+
+    return resultado;
+}
+
+// --- AGREGAR FILA O COLUMNA ---
+unsigned char* agregar_linea(unsigned char* tablero, int& filas, int& cols, size_t& bytes_reservados, int pos, bool es_fila) {
+    int nuevas_filas = es_fila ? filas + 1 : filas;
+    int nuevas_cols = es_fila ? cols : cols + 1;
+
+    size_t bits_nuevos = nuevas_filas * nuevas_cols * 3;
+    size_t bytes_nuevos = (bits_nuevos + 7) / 8;
+
+    // Se asigna un nuevo bloque de memoria para acomodar el incremento
+    unsigned char* nuevo_tablero = new unsigned char[bytes_nuevos]();
+
+    for (int f = 0; f < nuevas_filas; ++f) {
+        for (int c = 0; c < nuevas_cols; ++c) {
+            bool es_nueva_linea = (es_fila && f == pos) || (!es_fila && c == pos);
+
+            if (es_nueva_linea) {
+                // Asignar ficha aleatoria uniforme (000 a 101)
+                fijar_ficha(nuevo_tablero, f, c, nuevas_cols, rand() % 6);
+            } else {
+                // Recuperar ficha existente ajustando índices
+                int orig_f = (es_fila && f > pos) ? f - 1 : f;
+                int orig_c = (!es_fila && c > pos) ? c - 1 : c;
+                unsigned char ficha = obtener_ficha(tablero, orig_f, orig_c, cols);
+                fijar_ficha(nuevo_tablero, f, c, nuevas_cols, ficha);
             }
         }
+    }
+
+    delete[] tablero;
+    bytes_reservados = bytes_nuevos;
+    filas = nuevas_filas;
+    cols = nuevas_cols;
+
+    return nuevo_tablero;
+}
+
+// --- VISUALIZACIÓN DE LA TIRA DE BITS EN MEMORIA ---
+void imprimir_tira_binaria(const unsigned char* tablero, size_t bytes_reservados, int filas, int cols) {
+    size_t bits_utilizados = filas * cols * 3;
+
+    std::cout << "Secuencia empaquetada de bytes en memoria (" << bytes_reservados << " bytes reservado(s)):\n";
+
+    for (size_t i = 0; i < bytes_reservados; ++i) {
+        std::cout << "Byte " << i << ": [";
+        for (int bit = 7; bit >= 0; --bit) {
+            size_t bit_global = (i * 8) + bit;
+            if (bit_global < bits_utilizados) {
+                // Imprime el bit válido del tablero
+                std::cout << ((tablero[i] >> bit) & 1);
+            } else {
+                // Imprime 'X' o '0' para indicar bits de relleno sobrantes a la izquierda
+                std::cout << ".";
+            }
+        }
+        std::cout << "] ";
+    }
+    std::cout << "\n\n";
+}
+
+// --- DETECCIÓN DE COMBINACIONES (3 O MÁS IGUALES) ---
+bool detectar_y_marcar_combinaciones(const unsigned char* tablero, int filas, int cols, bool* eliminados) {
+    bool hay_combos = false;
+
+    // Escaneo Horizontal Corregido
+    for (int f = 0; f < filas; ++f) {
+        for (int c = 0; c < cols - 2; ) { // Se quitó el ++c de aquí
+            unsigned char v = obtener_ficha(tablero, f, c, cols);
+            if (v < 6 && v == obtener_ficha(tablero, f, c + 1, cols) && v == obtener_ficha(tablero, f, c + 2, cols)) {
+                int k = c;
+                while (k < cols && obtener_ficha(tablero, f, k, cols) == v) {
+                    eliminados[f * cols + k] = true;
+                    k++;
+                }
+                hay_combos = true;
+                c = k; // Salta inmediatamente después de las fichas ya marcadas
+            } else {
+                c++; // Avanza normalmente solo si no hubo combinación
+            }
+        }
+    }
+
+    // Escaneo Vertical Corregido
+    for (int c = 0; c < cols; ++c) {
+        for (int f = 0; f < filas - 2; ) { // Se quitó el ++f de aquí
+            unsigned char v = obtener_ficha(tablero, f, c, cols);
+            if (v < 6 && v == obtener_ficha(tablero, f + 1, c, cols) && v == obtener_ficha(tablero, f + 2, c, cols)) {
+                int k = f;
+                while (k < filas && obtener_ficha(tablero, k, c, cols) == v) {
+                    eliminados[k * cols + c] = true;
+                    k++;
+                }
+                hay_combos = true;
+                f = k; // Salta inmediatamente después de las fichas ya marcadas
+            } else {
+                f++; // Avanza normalmente solo si no hubo combinación
+            }
+        }
+    }
+
+    return hay_combos;
+}
+
+// --- GRAVEDAD Y REPOSICIÓN CORREGIDA ---
+int aplicar_gravedad_y_relleno(unsigned char* tablero, int filas, int cols, const bool* eliminados) {
+    int total_eliminadas = 0;
+
+    for (int c = 0; c < cols; ++c) {
+        // Crear un contenedor temporal para reconstruir la columna c de abajo hacia arriba
+        unsigned char* columna_temporal = new unsigned char[filas];
+        int pos_escribir = filas - 1;
+
+        // 1. Desplazar hacia abajo las fichas que NO fueron eliminadas
+        for (int f = filas - 1; f >= 0; --f) {
+            if (!eliminados[f * cols + c]) {
+                columna_temporal[pos_escribir] = obtener_ficha(tablero, f, c, cols);
+                pos_escribir--;
+            } else {
+                total_eliminadas++;
+            }
+        }
+
+        // 2. Rellenar los huecos superiores con nuevas fichas aleatorias (0 a 5)
+        while (pos_escribir >= 0) {
+            columna_temporal[pos_escribir] = rand() % 6;
+            pos_escribir--;
+        }
+
+        // 3. Volcar los datos procesados de forma segura de regreso al tablero empaquetado
+        for (int f = 0; f < filas; ++f) {
+            fijar_ficha(tablero, f, c, cols, columna_temporal[f]);
+        }
+
+        delete[] columna_temporal;
+    }
+
+    return total_eliminadas;
+}
+
+// --- BUCLE AUTOMÁTICO DE CASCADAS ---
+void procesar_cascadas(unsigned char* tablero, int filas, int cols, int& puntaje, int& total_fichas_destruidas, int& combinaciones, int& cascadas) {
+    int nivel_cascada = 0;
+
+    while (true) {
+        bool* eliminados = new bool[filas * cols]();
+        bool hay_combos = detectar_y_marcar_combinaciones(tablero, filas, cols, eliminados);
+
+        if (!hay_combos) {
+            delete[] eliminados;
+            break;
+        }
+
+        nivel_cascada++;
+        combinaciones++;
+        if (nivel_cascada > 1) cascadas++;
+
+        int destruidas = aplicar_gravedad_y_relleno(tablero, filas, cols, eliminados);
+        total_fichas_destruidas += destruidas;
+        puntaje += (destruidas * 10 * nivel_cascada);
+
+        delete[] eliminados;
     }
 }
 
-void rellenar_fichas_superiores(unsigned char* tablero, int filas, int cols) {
-    unsigned char casilla_vacia = 7;
+// --- ELIMINACIÓN MANUAL POR PARTE DEL JUGADOR ---
+void eliminar_ficha_usuario(unsigned char* tablero, int filas, int cols, int fila_sel, int col_sel, int& puntaje, int& total_fichas_destruidas, int& combinaciones, int& cascadas) {
+    bool* eliminados = new bool[filas * cols]();
+    eliminados[fila_sel * cols + col_sel] = true;
 
-    for (int c = 0; c < cols; ++c) {
-        for (int f = filas - 1; f >= 0; --f) {
-            if (obtener_ficha(tablero, f, c, cols) == casilla_vacia) {
-                unsigned char nueva_ficha = rand() % 6;
-                fijar_ficha(tablero, f, c, cols, nueva_ficha);
-            }
+    aplicar_gravedad_y_relleno(tablero, filas, cols, eliminados);
+    delete[] eliminados;
+
+    procesar_cascadas(tablero, filas, cols, puntaje, total_fichas_destruidas, combinaciones, cascadas);
+}
+
+
+void mostrar_tablero(const unsigned char* tablero, int filas, int cols) {
+    const char simbolos[] = {'A', 'B', 'C', 'D', 'E', 'F', ' ', '*'};
+    std::cout << "\n   ";
+    for (int c = 0; c < cols; ++c) std::cout << c << " ";
+    std::cout << "\n  +" << std::string(cols * 2, '-') << "+\n";
+
+    for (int f = 0; f < filas; ++f) {
+        std::cout << f << " |";
+        for (int c = 0; c < cols; ++c) {
+            unsigned char v = obtener_ficha(tablero, f, c, cols);
+            std::cout << simbolos[v] << " ";
         }
+        std::cout << "|\n";
     }
+    std::cout << "  +" << std::string(cols * 2, '-') << "+\n\n";
 }
