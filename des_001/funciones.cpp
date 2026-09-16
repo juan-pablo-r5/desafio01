@@ -280,9 +280,13 @@ void eliminar_ficha_usuario(unsigned char* tablero, int filas, int cols, int fil
 
 void mostrar_tablero(const unsigned char* tablero, int filas, int cols) {
     const char simbolos[] = {'A', 'B', 'C', 'D', 'E', 'F', ' ', '*'};
+
     std::cout << "\n   ";
     for (int c = 0; c < cols; ++c) std::cout << c << " ";
-    std::cout << "\n  +" << std::string(cols * 2, '-') << "+\n";
+
+    std::cout << "\n  +";
+    for (int i = 0; i < cols * 2; ++i) std::cout << "-";
+    std::cout << "+\n";
 
     for (int f = 0; f < filas; ++f) {
         std::cout << f << " |";
@@ -292,5 +296,8 @@ void mostrar_tablero(const unsigned char* tablero, int filas, int cols) {
         }
         std::cout << "|\n";
     }
-    std::cout << "  +" << std::string(cols * 2, '-') << "+\n\n";
+
+    std::cout << "  +";
+    for (int i = 0; i < cols * 2; ++i) std::cout << "-";
+    std::cout << "+\n\n";
 }
