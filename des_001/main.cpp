@@ -94,6 +94,7 @@ int main(){
         std::cout << "6. Ver estadisticas\n";
         std::cout << "7. Salir\n";
         std::cout << "Seleccione opcion: ";
+        std::cin >> opcion;
 
         //Respaldo y guardado de byted ante cualquier cambio o jugada
         size_t bytes_antes = bytes_reservados;
@@ -101,8 +102,6 @@ int main(){
         for (size_t i = 0; i < bytes_antes; ++i) {
             copia_antes[i] = tablero[i];
         }
-
-        std::cin >> opcion;
 
         switch(opcion) {
 
@@ -170,6 +169,8 @@ int main(){
                 std::cout << "Combinaciones detectadas: " << combinaciones << "\n";
                 std::cout << "Cascadas producidas: " << cascadas << "\n";
                 std::cout << "Puntuacion total: " << puntaje << "\n\n";
+                std::cin.clear();
+                std::cin.ignore(10000, '\n');
                 break;
             }
 
