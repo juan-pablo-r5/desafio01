@@ -260,3 +260,29 @@ void mostrar_tablero(const unsigned char* tablero, int filas, int cols) {
     }
     std::cout << "  +" << std::string(cols * 2, '-') << "+\n\n";
 }
+
+// 1. REGISTRO AUTOMÁTICO DE LOS BITD
+void registrar_estado_memoria(unsigned char** historial, int turno, const unsigned char* tablero, size_t bytes_reservados) {
+    if (tablero == nullptr || historial == nullptr) return;
+
+    // Asigna dinámicamente solo los bytes estrictamente necesarios para este tablero
+    historial[turno] = new unsigned char[bytes_reservados];
+
+    // Volcado de memoria directo byte a byte para preservar los bits exactos
+    for (size_t i = 0; i < bytes_reservados; ++i) {
+        historial[turno][i] = tablero[i];
+    }
+}
+
+// 2. LECTURA DEL HISTORIAL (Extrae los bytes guardados y los vuelca en un contenedor a disposición)
+void leer_registro_historial(unsigned char** historial, int turno_solicitado, unsigned char* contenedor_destino, size_t bytes_reservados) {
+    // Validación de seguridad: evita leer posiciones vacías
+    if (historial == nullptr || historial[turno_solicitado] == nullptr || contenedor_destino == nullptr) {
+        return;
+    }
+
+    // Copia los bits del historial de vuelta al contenedor de destino a alta velocidad
+    for (size_t i = 0; i < bytes_reservados; ++i) {
+        contenedor_destino[i] = historial[turno_solicitado][i];
+    }
+}

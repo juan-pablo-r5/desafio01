@@ -40,4 +40,9 @@ void eliminar_ficha_usuario(unsigned char* tablero, int filas, int cols, int fil
 
 void mostrar_tablero(const unsigned char* tablero, int filas, int cols);
 
+// --- REGISTRO AUTOMÁTICO DE BITS E HISTORIAL ---
+void registrar_estado_memoria(unsigned char** historial, int turno, const unsigned char* tablero, size_t bytes_reservados);
+void leer_registro_historial(unsigned char** historial, int turno_solicitado, unsigned char* contenedor_destino, size_t bytes_reservados);
+
+
 #endif // FUNCIONES_H

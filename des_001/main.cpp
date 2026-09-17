@@ -1,5 +1,6 @@
 #include "funciones.h"
 #include <ctime>
+
 void mostrar_matriz(const unsigned char* tablero, int filas, int cols) {
     std::cout << "Tablero (" << filas << "x" << cols << "):\n";
     for (int f = 0; f < filas; ++f) {
@@ -66,6 +67,14 @@ int main(){
     int combinaciones = 0;
     int cascadas = 0;
 
+    //Configurar el estado de los registros de bits
+    int turno_actual = 0;
+    unsigned char** historial_estados = new unsigned char*[100]; // Soporta hasta 100 jugadas
+    for (int i = 0; i < 100; ++i) historial_estados[i] = nullptr;
+
+    // Guardar el estado inicial
+    registrar_estado_memoria(historial_estados, turno_actual, tablero, bytes_reservados);
+
 
     // Limpiar combinaciones iniciales para arrancar con el tablero estable
     procesar_cascadas(tablero, filas, cols, puntaje, total_fichas_destruidas, combinaciones, cascadas);
@@ -85,85 +94,126 @@ int main(){
         std::cout << "6. Ver estadisticas\n";
         std::cout << "7. Salir\n";
         std::cout << "Seleccione opcion: ";
+
+        //Respaldo y guardado de byted ante cualquier cambio o jugada
+        size_t bytes_antes = bytes_reservados;
+        unsigned char* copia_antes = new unsigned char[bytes_antes];
+        for (size_t i = 0; i < bytes_antes; ++i) {
+            copia_antes[i] = tablero[i];
+        }
+
         std::cin >> opcion;
 
         switch(opcion) {
 
-        case 1: {
-            int f, c;
-            std::cout << "Ingrese fila (0 a " << filas - 1 << ") y columna (0 a " << cols - 1 << "): ";
-            std::cin >> f >> c;
-            if (f >= 0 && f < filas && c >= 0 && c < cols) {
-                eliminaciones_usuario++;
-                eliminar_ficha_usuario(tablero, filas, cols, f, c, puntaje, total_fichas_destruidas, combinaciones, cascadas);
+            case 1: {
+                int f, c;
+                std::cout << "Ingrese fila (0 a " << filas - 1 << ") y columna (0 a " << cols - 1 << "): ";
+                std::cin >> f >> c;
+                if (f >= 0 && f < filas && c >= 0 && c < cols) {
+                    eliminaciones_usuario++;
+                    eliminar_ficha_usuario(tablero, filas, cols, f, c, puntaje, total_fichas_destruidas, combinaciones, cascadas);
+                }
+                break;
             }
-            break;
-        }
 
-        case 2: {
-            int pos;
-            std::cout << "Ingrese posicion para insertar fila (0 a " << filas << "): ";
-            std::cin >> pos;
-            if (pos >= 0 && pos <= filas) {
-                tablero = agregar_linea(tablero, filas, cols, bytes_reservados, pos, true);
-                procesar_cascadas(tablero, filas, cols, puntaje, total_fichas_destruidas, combinaciones, cascadas);
+            case 2: {
+                int pos;
+                std::cout << "Ingrese posicion para insertar fila (0 a " << filas << "): ";
+                std::cin >> pos;
+                if (pos >= 0 && pos <= filas) {
+                    tablero = agregar_linea(tablero, filas, cols, bytes_reservados, pos, true);
+                    procesar_cascadas(tablero, filas, cols, puntaje, total_fichas_destruidas, combinaciones, cascadas);
+                }
+                break;
             }
-            break;
-        }
 
-        case 3: {
-            int pos;
-            std::cout << "Ingrese posicion de fila a eliminar (0 a " << filas - 1 << "): ";
-            std::cin >> pos;
-            if (pos >= 0 && pos < filas) {
-                tablero = eliminar_linea(tablero, filas, cols, bytes_reservados, pos, true);
-                procesar_cascadas(tablero, filas, cols, puntaje, total_fichas_destruidas, combinaciones, cascadas);
+            case 3: {
+                int pos;
+                std::cout << "Ingrese posicion de fila a eliminar (0 a " << filas - 1 << "): ";
+                std::cin >> pos;
+                if (pos >= 0 && pos < filas) {
+                    tablero = eliminar_linea(tablero, filas, cols, bytes_reservados, pos, true);
+                    procesar_cascadas(tablero, filas, cols, puntaje, total_fichas_destruidas, combinaciones, cascadas);
+                }
+                break;
             }
-            break;
-        }
 
-        case 4: {
-            int pos;
-            std::cout << "Ingrese posicion para insertar columna (0 a " << cols << "): ";
-            std::cin >> pos;
-            if (pos >= 0 && pos <= cols) {
-                tablero = agregar_linea(tablero, filas, cols, bytes_reservados, pos, false);
-                procesar_cascadas(tablero, filas, cols, puntaje, total_fichas_destruidas, combinaciones, cascadas);
+            case 4: {
+                int pos;
+                std::cout << "Ingrese posicion para insertar columna (0 a " << cols << "): ";
+                std::cin >> pos;
+                if (pos >= 0 && pos <= cols) {
+                    tablero = agregar_linea(tablero, filas, cols, bytes_reservados, pos, false);
+                    procesar_cascadas(tablero, filas, cols, puntaje, total_fichas_destruidas, combinaciones, cascadas);
+                }
+                break;
             }
-            break;
-        }
 
-        case 5: {
-            int pos;
-            std::cout << "Ingrese posicion de columna a eliminar (0 a " << cols - 1 << "): ";
-            std::cin >> pos;
-            if (pos >= 0 && pos < cols) {
-                tablero = eliminar_linea(tablero, filas, cols, bytes_reservados, pos, false);
-                procesar_cascadas(tablero, filas, cols, puntaje, total_fichas_destruidas, combinaciones, cascadas);
+            case 5: {
+                int pos;
+                std::cout << "Ingrese posicion de columna a eliminar (0 a " << cols - 1 << "): ";
+                std::cin >> pos;
+                if (pos >= 0 && pos < cols) {
+                    tablero = eliminar_linea(tablero, filas, cols, bytes_reservados, pos, false);
+                    procesar_cascadas(tablero, filas, cols, puntaje, total_fichas_destruidas, combinaciones, cascadas);
+                }
+                break;
             }
-            break;
-        }
 
-        case 6: {
-            std::cout << "\n=== ESTADISTICAS DEL JUEGO ===\n";
-            std::cout << "Dimensiones actuales: " << filas << "x" << cols << "\n";
-            std::cout << "Bytes fisicos reservados: " << bytes_reservados << "\n";
-            std::cout << "Eliminaciones del usuario: " << eliminaciones_usuario << "\n";
-            std::cout << "Total fichas destruidas: " << total_fichas_destruidas << "\n";
-            std::cout << "Combinaciones detectadas: " << combinaciones << "\n";
-            std::cout << "Cascadas producidas: " << cascadas << "\n";
-            std::cout << "Puntuacion total: " << puntaje << "\n\n";
-            break;
-        }
+            case 6: {
+                std::cout << "\n=== ESTADISTICAS DEL JUEGO ===\n";
+                std::cout << "Dimensiones actuales: " << filas << "x" << cols << "\n";
+                std::cout << "Bytes fisicos reservados: " << bytes_reservados << "\n";
+                std::cout << "Eliminaciones del usuario: " << eliminaciones_usuario << "\n";
+                std::cout << "Total fichas destruidas: " << total_fichas_destruidas << "\n";
+                std::cout << "Combinaciones detectadas: " << combinaciones << "\n";
+                std::cout << "Cascadas producidas: " << cascadas << "\n";
+                std::cout << "Puntuacion total: " << puntaje << "\n\n";
+                break;
+            }
 
-        case 7: {
-            std::cout << "Gracias por jugar!!!\n";
-            break;
-        }
+            case 7: {
+                std::cout << "Gracias por jugar!!!\n";
+                break;
+            }
 
         }
 
-        delete[] tablero;
-        return 0;
+         bool memoria_cambio = false;
+
+        //verifica si el tblero cambio
+        if (bytes_antes != bytes_reservados) {
+            memoria_cambio = true;
+        }
+
+        else {
+                // Si mantienen el tamaño, comparamos la RAM byte por byte
+            for (size_t i = 0; i < bytes_reservados; ++i) {
+                if (copia_antes[i] != tablero[i]) {
+                    memoria_cambio = true;
+                    break;
+                }
+            }
+        }
+
+            // Si se detecta un cambio real en los bits, se avanza el turno y se registra de forma automática
+        if (memoria_cambio && turno_actual < 99) {
+            turno_actual++;
+            registrar_estado_memoria(historial_estados, turno_actual, tablero, bytes_reservados);
+        }
+
+        delete[] copia_antes;
     }
+
+    // Liberar de memoria dinanica del historial
+    for (int i = 0; i <= turno_actual; ++i) {
+        if (historial_estados[i] != nullptr) {
+            delete[] historial_estados[i];
+        }
+    }
+    delete[] historial_estados;
+
+    delete[] tablero;
+    return 0;
 }
