@@ -1,5 +1,8 @@
 #include "funciones.h"
 #include <cstdlib>
+#include <fstream>
+#include <iostream>
+using namespace std;
 
 unsigned char obtener_ficha(const unsigned char* tablero, int fila, int col, int cols) {
     int indice = (fila * cols) + col;
@@ -246,9 +249,13 @@ void eliminar_ficha_usuario(unsigned char* tablero, int filas, int cols, int fil
 
 void mostrar_tablero(const unsigned char* tablero, int filas, int cols) {
     const char simbolos[] = {'A', 'B', 'C', 'D', 'E', 'F', ' ', '*'};
+
     std::cout << "\n   ";
     for (int c = 0; c < cols; ++c) std::cout << c << " ";
-    std::cout << "\n  +" << std::string(cols * 2, '-') << "+\n";
+
+    std::cout << "\n  +";
+    for (int i = 0; i < cols * 2; ++i) std::cout << "-";
+    std::cout << "+\n";
 
     for (int f = 0; f < filas; ++f) {
         std::cout << f << " |";
@@ -258,33 +265,63 @@ void mostrar_tablero(const unsigned char* tablero, int filas, int cols) {
         }
         std::cout << "|\n";
     }
-    std::cout << "  +" << std::string(cols * 2, '-') << "+\n\n";
+
+    std::cout << "  +";
+    for (int i = 0; i < cols * 2; ++i) std::cout << "-";
+    std::cout << "+\n\n";
 }
 
-// 1. REGISTRO: Duplica los bits actuales en el puntero de respaldo anterior
-void registrar_estado_memoria(unsigned char*& tablero_anterior, const unsigned char* tablero_actual, size_t bytes_reservados) {
+void registrar_estado_memoria(const unsigned char* tablero_actual, size_t bytes_reservados, const char* nombre_archivo) {
     if (tablero_actual == nullptr) return;
 
-    // Liberamos el respaldo del turno pasado para no dejar basura en la RAM
-    if (tablero_anterior != nullptr) {
-        delete[] tablero_anterior;
-    }
+    std::ofstream archivo(nombre_archivo, std::ios::binary);
 
-    // Reservamos el espacio exacto para la copia del nuevo estado
-    tablero_anterior = new unsigned char[bytes_reservados];
-
-    // Volcado físico byte a byte para congelar los bits
-    for (size_t i = 0; i < bytes_reservados; ++i) {
-        tablero_anterior[i] = tablero_actual[i];
+    if (archivo.is_open()) {
+        archivo.write(reinterpret_cast<const char*>(tablero_actual), bytes_reservados);
+        archivo.close();
+    } else {
+        std::cout << "Error: No se pudo crear el archivo de respaldo.\n";
     }
 }
 
-// 2. LECTURA: Recupera los bits del respaldo y los inyecta en el contenedor a disposición
-void leer_registro_historial(const unsigned char* tablero_anterior, unsigned char* tablero_actual, size_t bytes_reservados) {
-    if (tablero_anterior == nullptr || tablero_actual == nullptr) return;
+void leer_registro_historial(unsigned char* tablero_actual, size_t bytes_reservados, const char* nombre_archivo) {
+    if (tablero_actual == nullptr) return;
 
-    // Restauración de bits a alta velocidad
-    for (size_t i = 0; i < bytes_reservados; ++i) {
-        tablero_actual[i] = tablero_anterior[i];
+    std::ifstream archivo(nombre_archivo, std::ios::binary);
+
+    if (archivo.is_open()) {
+        archivo.read(reinterpret_cast<char*>(tablero_actual), bytes_reservados);
+        archivo.close();
+    } else {
+        std::cout << "Error: No se encontro el archivo de respaldo para leer.\n";
+    }
+}
+
+void exportar_reporte_bits(const unsigned char* tablero, size_t bytes_reservados, int filas, int cols, const char* nombre_archivo) {
+    if (tablero == nullptr) return;
+
+    std::ofstream archivo(nombre_archivo);
+
+    if (archivo.is_open()) {
+        size_t bits_utilizados = filas * cols * 3;
+
+        // Imprimimos todos los bits de corrido
+        for (size_t i = 0; i < bytes_reservados; ++i) {
+            for (int bit = 7; bit >= 0; --bit) {
+                size_t bit_global = (i * 8) + bit;
+                if (bit_global < bits_utilizados) {
+                    archivo << ((tablero[i] >> bit) & 1);
+                } else {
+                    archivo << "."; // Bits sobrantes al final
+                }
+            }
+            // Opcional: un espacio en blanco entre bytes para no marearte leyendo,
+            // si lo quieres 100% pegado, puedes borrar la siguiente línea:
+            archivo << " ";
+        }
+
+        archivo.close();
+    } else {
+        std::cout << "Error: No se pudo crear el reporte de texto.\n";
     }
 }

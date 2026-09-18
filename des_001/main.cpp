@@ -1,5 +1,8 @@
 #include "funciones.h"
 #include <ctime>
+#include <iostream>
+using namespace std;
+
 
 void mostrar_matriz(const unsigned char* tablero, int filas, int cols) {
     std::cout << "Tablero (" << filas << "x" << cols << "):\n";
@@ -67,10 +70,9 @@ int main(){
     int combinaciones = 0;
     int cascadas = 0;
 
-    unsigned char* tablero_anterior = nullptr;
 
     // Guardamos los bits del estado inicial del tablero
-    registrar_estado_memoria(tablero_anterior, tablero, bytes_reservados);
+    registrar_estado_memoria(tablero, bytes_reservados, "historial_bits.txt");
 
 
     // Limpiar combinaciones iniciales para arrancar con el tablero estable
@@ -194,16 +196,15 @@ int main(){
 
         // Si los bits mutaron, la función clona los datos sobre el puntero sencillo de respaldo
         if (memoria_cambio) {
-            registrar_estado_memoria(tablero_anterior, tablero, bytes_reservados);
+            // 1. Guardado binario real (para el programa)
+            registrar_estado_memoria(tablero, bytes_reservados, "partida_guardada.bin");
+
+            // 2. Guardado de texto visual (para ti y para el video)
+            exportar_reporte_bits(tablero, bytes_reservados, filas, cols, "reporte_bits.txt");
         }
 
         delete[] copia_antes; // Libera el bloque temporal de este turno
     }
-
-    if (tablero_anterior != nullptr) {
-        delete[] tablero_anterior;
-    }
-
     delete[] tablero;
     return 0;
 }

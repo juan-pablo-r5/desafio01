@@ -1,11 +1,7 @@
 #ifndef FUNCIONES_H
 #define FUNCIONES_H
 
-#include<iostream>
-using namespace std;
-
-
-#include <cstddef> // Para size_t
+#include <cstddef>
 
 // --- MANIPULACIÓN A NIVEL DE BITS ---
 // Extrae el valor de 3 bits de la celda (fila, col)
@@ -40,11 +36,11 @@ void eliminar_ficha_usuario(unsigned char* tablero, int filas, int cols, int fil
 
 void mostrar_tablero(const unsigned char* tablero, int filas, int cols);
 
-// Registra y hace una copia del estado anterior del tablero
-void registrar_estado_memoria(unsigned char*& tablero_anterior, const unsigned char* tablero_actual, size_t bytes_reservados);
 
-// Lee los bits guardados en el respaldo
-void leer_registro_historial(const unsigned char* tablero_anterior, unsigned char* tablero_actual, size_t bytes_reservados);
+void registrar_estado_memoria(const unsigned char* tablero_actual, size_t bytes_reservados, const char* nombre_archivo);
 
+void leer_registro_historial(unsigned char* tablero_actual, size_t bytes_reservados, const char* nombre_archivo);
+
+void exportar_reporte_bits(const unsigned char* tablero, size_t bytes_reservados, int filas, int cols, const char* nombre_archivo);
 
 #endif // FUNCIONES_H
