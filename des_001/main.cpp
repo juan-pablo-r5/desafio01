@@ -67,13 +67,10 @@ int main(){
     int combinaciones = 0;
     int cascadas = 0;
 
-    //Configurar el estado de los registros de bits
-    int turno_actual = 0;
-    unsigned char** historial_estados = new unsigned char*[100]; // Soporta hasta 100 jugadas
-    for (int i = 0; i < 100; ++i) historial_estados[i] = nullptr;
+    unsigned char* tablero_anterior = nullptr;
 
-    // Guardar el estado inicial
-    registrar_estado_memoria(historial_estados, turno_actual, tablero, bytes_reservados);
+    // Guardamos los bits del estado inicial del tablero
+    registrar_estado_memoria(tablero_anterior, tablero, bytes_reservados);
 
 
     // Limpiar combinaciones iniciales para arrancar con el tablero estable
@@ -178,18 +175,15 @@ int main(){
                 std::cout << "Gracias por jugar!!!\n";
                 break;
             }
-
         }
 
-         bool memoria_cambio = false;
+        bool memoria_cambio = false;
 
-        //verifica si el tblero cambio
+        // Compara las dimensiones físicas
         if (bytes_antes != bytes_reservados) {
             memoria_cambio = true;
-        }
-
-        else {
-                // Si mantienen el tamaño, comparamos la RAM byte por byte
+        } else {
+            // Compara byte por byte la secuencia en RAM
             for (size_t i = 0; i < bytes_reservados; ++i) {
                 if (copia_antes[i] != tablero[i]) {
                     memoria_cambio = true;
@@ -198,22 +192,17 @@ int main(){
             }
         }
 
-            // Si se detecta un cambio real en los bits, se avanza el turno y se registra de forma automática
-        if (memoria_cambio && turno_actual < 99) {
-            turno_actual++;
-            registrar_estado_memoria(historial_estados, turno_actual, tablero, bytes_reservados);
+        // Si los bits mutaron, la función clona los datos sobre el puntero sencillo de respaldo
+        if (memoria_cambio) {
+            registrar_estado_memoria(tablero_anterior, tablero, bytes_reservados);
         }
 
-        delete[] copia_antes;
+        delete[] copia_antes; // Libera el bloque temporal de este turno
     }
 
-    // Liberar de memoria dinanica del historial
-    for (int i = 0; i <= turno_actual; ++i) {
-        if (historial_estados[i] != nullptr) {
-            delete[] historial_estados[i];
-        }
+    if (tablero_anterior != nullptr) {
+        delete[] tablero_anterior;
     }
-    delete[] historial_estados;
 
     delete[] tablero;
     return 0;

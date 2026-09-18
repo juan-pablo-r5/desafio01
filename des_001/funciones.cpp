@@ -261,28 +261,30 @@ void mostrar_tablero(const unsigned char* tablero, int filas, int cols) {
     std::cout << "  +" << std::string(cols * 2, '-') << "+\n\n";
 }
 
-// 1. REGISTRO AUTOMÁTICO DE LOS BITD
-void registrar_estado_memoria(unsigned char** historial, int turno, const unsigned char* tablero, size_t bytes_reservados) {
-    if (tablero == nullptr || historial == nullptr) return;
+// 1. REGISTRO: Duplica los bits actuales en el puntero de respaldo anterior
+void registrar_estado_memoria(unsigned char*& tablero_anterior, const unsigned char* tablero_actual, size_t bytes_reservados) {
+    if (tablero_actual == nullptr) return;
 
-    // Asigna dinámicamente solo los bytes estrictamente necesarios para este tablero
-    historial[turno] = new unsigned char[bytes_reservados];
+    // Liberamos el respaldo del turno pasado para no dejar basura en la RAM
+    if (tablero_anterior != nullptr) {
+        delete[] tablero_anterior;
+    }
 
-    // Volcado de memoria directo byte a byte para preservar los bits exactos
+    // Reservamos el espacio exacto para la copia del nuevo estado
+    tablero_anterior = new unsigned char[bytes_reservados];
+
+    // Volcado físico byte a byte para congelar los bits
     for (size_t i = 0; i < bytes_reservados; ++i) {
-        historial[turno][i] = tablero[i];
+        tablero_anterior[i] = tablero_actual[i];
     }
 }
 
-// 2. LECTURA DEL HISTORIAL (Extrae los bytes guardados y los vuelca en un contenedor a disposición)
-void leer_registro_historial(unsigned char** historial, int turno_solicitado, unsigned char* contenedor_destino, size_t bytes_reservados) {
-    // Validación de seguridad: evita leer posiciones vacías
-    if (historial == nullptr || historial[turno_solicitado] == nullptr || contenedor_destino == nullptr) {
-        return;
-    }
+// 2. LECTURA: Recupera los bits del respaldo y los inyecta en el contenedor a disposición
+void leer_registro_historial(const unsigned char* tablero_anterior, unsigned char* tablero_actual, size_t bytes_reservados) {
+    if (tablero_anterior == nullptr || tablero_actual == nullptr) return;
 
-    // Copia los bits del historial de vuelta al contenedor de destino a alta velocidad
+    // Restauración de bits a alta velocidad
     for (size_t i = 0; i < bytes_reservados; ++i) {
-        contenedor_destino[i] = historial[turno_solicitado][i];
+        tablero_actual[i] = tablero_anterior[i];
     }
 }
