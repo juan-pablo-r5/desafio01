@@ -2,7 +2,6 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
-using namespace std;
 
 unsigned char obtener_ficha(const unsigned char* tablero, int fila, int col, int cols) {
     int indice = (fila * cols) + col;
@@ -99,20 +98,20 @@ unsigned char* eliminar_linea(unsigned char* tablero, int& filas, int& cols, siz
 
 void imprimir_tira_binaria(const unsigned char* tablero, size_t bytes_reservados, int filas, int cols) {
     size_t bits_utilizados = filas * cols * 3;
-    std::cout << "Secuencia empaquetada en memoria (" << bytes_reservados << " bytes):\n";
+    cout << "Secuencia empaquetada en memoria (" << bytes_reservados << " bytes):\n";
     for (size_t i = 0; i < bytes_reservados; ++i) {
-        std::cout << "Byte " << i << ": [";
+        cout << "Byte " << i << ": [";
         for (int bit = 7; bit >= 0; --bit) {
             size_t bit_global = (i * 8) + bit;
             if (bit_global < bits_utilizados) {
-                std::cout << ((tablero[i] >> bit) & 1);
+                cout << ((tablero[i] >> bit) & 1);
             } else {
-                std::cout << ".";
+                cout << ".";
             }
         }
-        std::cout << "] ";
+        cout << "] ";
     }
-    std::cout << "\n\n";
+    cout << "\n\n";
 }
 
 
@@ -179,7 +178,7 @@ void registrar_estado_memoria(const unsigned char* tablero_actual, size_t bytes_
         archivo.write(reinterpret_cast<const char*>(tablero_actual), bytes_reservados);
         archivo.close();
     } else {
-        std::cout << "Error: No se pudo crear el archivo de respaldo.\n";
+        cout << "Error: No se pudo crear el archivo de respaldo.\n";
     }
 }
 
@@ -192,7 +191,7 @@ void leer_registro_historial(unsigned char* tablero_actual, size_t bytes_reserva
         archivo.read(reinterpret_cast<char*>(tablero_actual), bytes_reservados);
         archivo.close();
     } else {
-        std::cout << "Error: No se encontro el archivo de respaldo para leer.\n";
+        cout << "Error: No se encontro el archivo de respaldo para leer.\n";
     }
 }
 
@@ -288,25 +287,25 @@ void eliminar_ficha_usuario(unsigned char* tablero, int filas, int cols, int fil
 void mostrar_tablero(const unsigned char* tablero, int filas, int cols) {
     const char simbolos[] = {'A', 'B', 'C', 'D', 'E', 'F', ' ', '*'};
 
-    std::cout << "\n   ";
-    for (int c = 0; c < cols; ++c) std::cout << c << " ";
+    cout << "\n   ";
+    for (int c = 0; c < cols; ++c) cout << c << " ";
 
-    std::cout << "\n  +";
-    for (int i = 0; i < cols * 2; ++i) std::cout << "-";
-    std::cout << "+\n";
+    cout << "\n  +";
+    for (int i = 0; i < cols * 2; ++i) cout << "-";
+    cout << "+\n";
 
     for (int f = 0; f < filas; ++f) {
-        std::cout << f << " |";
+        cout << f << " |";
         for (int c = 0; c < cols; ++c) {
             unsigned char v = obtener_ficha(tablero, f, c, cols);
-            std::cout << simbolos[v] << " ";
+            cout << simbolos[v] << " ";
         }
-        std::cout << "|\n";
+        cout << "|\n";
     }
 
-    std::cout << "  +";
-    for (int i = 0; i < cols * 2; ++i) std::cout << "-";
-    std::cout << "+\n\n";
+    cout << "  +";
+    for (int i = 0; i < cols * 2; ++i) cout << "-";
+    cout << "+\n\n";
 }
 
 void exportar_reporte_bits(const unsigned char* tablero, size_t bytes_reservados, int filas, int cols, const char* nombre_archivo) {
@@ -334,6 +333,6 @@ void exportar_reporte_bits(const unsigned char* tablero, size_t bytes_reservados
 
         archivo.close();
     } else {
-        std::cout << "Error: No se pudo crear el reporte de texto.\n";
+        cout << "Error: No se pudo crear el reporte de texto.\n";
     }
 }
