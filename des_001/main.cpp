@@ -4,17 +4,6 @@
 using namespace std;
 
 
-void mostrar_matriz(const unsigned char* tablero, int filas, int cols) {
-    std::cout << "Tablero (" << filas << "x" << cols << "):\n";
-    for (int f = 0; f < filas; ++f) {
-        for (int c = 0; c < cols; ++c) {
-            std::cout << (int)obtener_ficha(tablero, f, c, cols) << " ";
-        }
-        std::cout << "\n";
-    }
-    std::cout << "\n";
-}
-
 
 int main(){
 
