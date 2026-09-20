@@ -284,20 +284,6 @@ void registrar_estado_memoria(const unsigned char* tablero_actual, size_t bytes_
     }
 }
 
-void leer_registro_historial(unsigned char* tablero_actual, size_t bytes_reservados, const char* nombre_archivo) {
-    if (tablero_actual == nullptr) return;
-
-    std::ifstream archivo(nombre_archivo, std::ios::binary);
-
-    if (archivo.is_open()) {
-        archivo.read(reinterpret_cast<char*>(tablero_actual), bytes_reservados);
-        archivo.close();
-    } else {
-        cout << "Error: No se encontro el archivo de respaldo para leer.\n";
-    }
-}
-
-
 
 
 void exportar_reporte_bits(const unsigned char* tablero, size_t bytes_reservados, int filas, int cols, const char* nombre_archivo) {

@@ -24,7 +24,6 @@ void mostrar_tablero(const unsigned char* tablero, int filas, int cols);
 
 
 void registrar_estado_memoria(const unsigned char* tablero_actual, size_t bytes_reservados, const char* nombre_archivo);
-void leer_registro_historial(unsigned char* tablero_actual, size_t bytes_reservados, const char* nombre_archivo);
 void exportar_reporte_bits(const unsigned char* tablero, size_t bytes_reservados, int filas, int cols, const char* nombre_archivo);
 bool guardar_partida_txt(const char* nombre_archivo, const unsigned char* tablero, int filas, int cols, size_t bytes_reservados, int puntaje, int elim_usr, int dest_fichas, int comb, int casc);
 unsigned char* cargar_partida_txt(const char* nombre_archivo, int& filas, int& cols, size_t& bytes_reservados, int& puntaje, int& elim_usr, int& dest_fichas, int& comb, int& casc);
