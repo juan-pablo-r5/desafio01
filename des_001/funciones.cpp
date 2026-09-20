@@ -103,14 +103,18 @@ unsigned char* agregar_linea(unsigned char* tablero, int& filas, int& cols, size
     size_t bits_nuevos = nuevas_filas * nuevas_cols * 3;
     size_t bytes_nuevos = (bits_nuevos + 7) / 8;
 
+    // Se asigna un nuevo bloque de memoria para acomodar el incremento
     unsigned char* nuevo_tablero = new unsigned char[bytes_nuevos]();
 
     for (int f = 0; f < nuevas_filas; ++f) {
         for (int c = 0; c < nuevas_cols; ++c) {
             bool es_nueva_linea = (es_fila && f == pos) || (!es_fila && c == pos);
+
             if (es_nueva_linea) {
+                // Asignar ficha aleatoria uniforme (000 a 101)
                 fijar_ficha(nuevo_tablero, f, c, nuevas_cols, rand() % 6);
             } else {
+                // Recuperar ficha existente ajustando índices
                 int orig_f = (es_fila && f > pos) ? f - 1 : f;
                 int orig_c = (!es_fila && c > pos) ? c - 1 : c;
                 unsigned char ficha = obtener_ficha(tablero, orig_f, orig_c, cols);
@@ -123,67 +127,61 @@ unsigned char* agregar_linea(unsigned char* tablero, int& filas, int& cols, size
     bytes_reservados = bytes_nuevos;
     filas = nuevas_filas;
     cols = nuevas_cols;
+
     return nuevo_tablero;
 }
 
 void imprimir_tira_binaria(const unsigned char* tablero, size_t bytes_reservados, int filas, int cols) {
     size_t bits_utilizados = filas * cols * 3;
-    std::cout << "Secuencia empaquetada en memoria (" << bytes_reservados << " bytes):\n";
+    cout << "Secuencia empaquetada en memoria (" << bytes_reservados << " bytes):\n";
     for (size_t i = 0; i < bytes_reservados; ++i) {
-        std::cout << "Byte " << i << ": [";
+        cout << "Byte " << i << ": [";
         for (int bit = 7; bit >= 0; --bit) {
             size_t bit_global = (i * 8) + bit;
             if (bit_global < bits_utilizados) {
-                std::cout << ((tablero[i] >> bit) & 1);
+                cout << ((tablero[i] >> bit) & 1);
             } else {
-                std::cout << ".";
+                cout << ".";
             }
         }
-        std::cout << "] ";
+        cout << "] ";
     }
-    std::cout << "\n\n";
+    cout << "\n\n";
 }
 
-// CORRECCIÓN ULTRA-SEGURA CONTRA BUCLES INFINITOS
 bool detectar_y_marcar_combinaciones(const unsigned char* tablero, int filas, int cols, bool* eliminados) {
     bool hay_combos = false;
-    for (int i = 0; i < filas * cols; ++i) eliminados[i] = false;
 
-    // Horizontal
+    // Escaneo Horizontal
     for (int f = 0; f < filas; ++f) {
-        for (int c = 0; c < cols - 2; ) {
+        for (int c = 0; c < cols - 2; ++c) {
             unsigned char v = obtener_ficha(tablero, f, c, cols);
-            if (v < 6 && obtener_ficha(tablero, f, c + 1, cols) == v && obtener_ficha(tablero, f, c + 2, cols) == v) {
+            if (v < 6 && v == obtener_ficha(tablero, f, c + 1, cols) && v == obtener_ficha(tablero, f, c + 2, cols)) {
                 int k = c;
                 while (k < cols && obtener_ficha(tablero, f, k, cols) == v) {
                     eliminados[f * cols + k] = true;
                     k++;
                 }
                 hay_combos = true;
-                c = k;
-            } else {
-                c++;
             }
         }
     }
 
-    // Vertical
+    // Escaneo Vertical
     for (int c = 0; c < cols; ++c) {
-        for (int f = 0; f < filas - 2; ) {
+        for (int f = 0; f < filas - 2; ++f) {
             unsigned char v = obtener_ficha(tablero, f, c, cols);
-            if (v < 6 && obtener_ficha(tablero, f + 1, c, cols) == v && obtener_ficha(tablero, f + 2, c, cols) == v) {
+            if (v < 6 && v == obtener_ficha(tablero, f + 1, c, cols) && v == obtener_ficha(tablero, f + 2, c, cols)) {
                 int k = f;
                 while (k < filas && obtener_ficha(tablero, k, c, cols) == v) {
                     eliminados[k * cols + c] = true;
                     k++;
                 }
                 hay_combos = true;
-                f = k;
-            } else {
-                f++;
             }
         }
     }
+
     return hay_combos;
 }
 
@@ -242,33 +240,35 @@ void procesar_cascadas(unsigned char* tablero, int filas, int cols, int& puntaje
 void eliminar_ficha_usuario(unsigned char* tablero, int filas, int cols, int fila_sel, int col_sel, int& puntaje, int& total_fichas_destruidas, int& combinaciones, int& cascadas) {
     bool* eliminados = new bool[filas * cols]();
     eliminados[fila_sel * cols + col_sel] = true;
+
     aplicar_gravedad_y_relleno(tablero, filas, cols, eliminados);
     delete[] eliminados;
+
     procesar_cascadas(tablero, filas, cols, puntaje, total_fichas_destruidas, combinaciones, cascadas);
 }
 
 void mostrar_tablero(const unsigned char* tablero, int filas, int cols) {
     const char simbolos[] = {'A', 'B', 'C', 'D', 'E', 'F', ' ', '*'};
 
-    std::cout << "\n   ";
-    for (int c = 0; c < cols; ++c) std::cout << c << " ";
+    cout << "\n   ";
+    for (int c = 0; c < cols; ++c) cout << c << " ";
 
-    std::cout << "\n  +";
-    for (int i = 0; i < cols * 2; ++i) std::cout << "-";
-    std::cout << "+\n";
+    cout << "\n  +";
+    for (int i = 0; i < cols * 2; ++i) cout << "-";
+    cout << "+\n";
 
     for (int f = 0; f < filas; ++f) {
-        std::cout << f << " |";
+        cout << f << " |";
         for (int c = 0; c < cols; ++c) {
             unsigned char v = obtener_ficha(tablero, f, c, cols);
-            std::cout << simbolos[v] << " ";
+            cout << simbolos[v] << " ";
         }
-        std::cout << "|\n";
+        cout << "|\n";
     }
 
-    std::cout << "  +";
-    for (int i = 0; i < cols * 2; ++i) std::cout << "-";
-    std::cout << "+\n\n";
+    cout << "  +";
+    for (int i = 0; i < cols * 2; ++i) cout << "-";
+    cout << "+\n\n";
 }
 
 void registrar_estado_memoria(const unsigned char* tablero_actual, size_t bytes_reservados, const char* nombre_archivo) {
@@ -280,7 +280,7 @@ void registrar_estado_memoria(const unsigned char* tablero_actual, size_t bytes_
         archivo.write(reinterpret_cast<const char*>(tablero_actual), bytes_reservados);
         archivo.close();
     } else {
-        std::cout << "Error: No se pudo crear el archivo de respaldo.\n";
+        cout << "Error: No se pudo crear el archivo de respaldo.\n";
     }
 }
 
@@ -293,7 +293,7 @@ void leer_registro_historial(unsigned char* tablero_actual, size_t bytes_reserva
         archivo.read(reinterpret_cast<char*>(tablero_actual), bytes_reservados);
         archivo.close();
     } else {
-        std::cout << "Error: No se encontro el archivo de respaldo para leer.\n";
+        cout << "Error: No se encontro el archivo de respaldo para leer.\n";
     }
 }
 
@@ -322,6 +322,6 @@ void exportar_reporte_bits(const unsigned char* tablero, size_t bytes_reservados
 
         archivo.close();
     } else {
-        std::cout << "Error: No se pudo crear el reporte de texto.\n";
+        cout << "Error: No se pudo crear el reporte de texto.\n";
     }
 }
