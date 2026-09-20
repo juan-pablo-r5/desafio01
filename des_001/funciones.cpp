@@ -95,109 +95,6 @@ unsigned char* eliminar_linea(unsigned char* tablero, int& filas, int& cols, siz
     return resultado;
 }
 
-
-void imprimir_tira_binaria(const unsigned char* tablero, size_t bytes_reservados, int filas, int cols) {
-    size_t bits_utilizados = filas * cols * 3;
-    cout << "Secuencia empaquetada en memoria (" << bytes_reservados << " bytes):\n";
-    for (size_t i = 0; i < bytes_reservados; ++i) {
-        cout << "Byte " << i << ": [";
-        for (int bit = 7; bit >= 0; --bit) {
-            size_t bit_global = (i * 8) + bit;
-            if (bit_global < bits_utilizados) {
-                cout << ((tablero[i] >> bit) & 1);
-            } else {
-                cout << ".";
-            }
-        }
-        cout << "] ";
-    }
-    cout << "\n\n";
-}
-
-
-
-// CORRECCIÓN DE LA GRAVEDAD PARA EVITAR CLONACIONES EN EMBAJADA
-int aplicar_gravedad_y_relleno(unsigned char* tablero, int filas, int cols, const bool* eliminados) {
-    int total_eliminadas = 0;
-    for (int c = 0; c < cols; ++c) {
-        unsigned char* columna_temporal = new unsigned char[filas];
-        int pos_escribir = filas - 1;
-
-        for (int f = filas - 1; f >= 0; --f) {
-            if (!eliminados[f * cols + c]) {
-                columna_temporal[pos_escribir] = obtener_ficha(tablero, f, c, cols);
-                pos_escribir--;
-            } else {
-                total_eliminadas++;
-            }
-        }
-
-        while (pos_escribir >= 0) {
-            columna_temporal[pos_escribir] = rand() % 6;
-            pos_escribir--;
-        }
-
-        for (int f = 0; f < filas; ++f) {
-            fijar_ficha(tablero, f, c, cols, columna_temporal[f]);
-        }
-        delete[] columna_temporal;
-    }
-    return total_eliminadas;
-}
-
-void procesar_cascadas(unsigned char* tablero, int filas, int cols, int& puntaje, int& total_fichas_destruidas, int& combinaciones, int& cascadas) {
-    int nivel_cascada = 0;
-    while (true) {
-        bool* eliminados = new bool[filas * cols];
-        bool hay_combos = detectar_y_marcar_combinaciones(tablero, filas, cols, eliminados);
-
-        if (!hay_combos) {
-            delete[] eliminados;
-            break;
-        }
-
-        nivel_cascada++;
-        combinaciones++;
-        if (nivel_cascada > 1) cascadas++;
-
-        int destruidas = aplicar_gravedad_y_relleno(tablero, filas, cols, eliminados);
-        total_fichas_destruidas += destruidas;
-        puntaje += (destruidas * 10 * nivel_cascada);
-
-        delete[] eliminados;
-    }
-}
-
-
-void registrar_estado_memoria(const unsigned char* tablero_actual, size_t bytes_reservados, const char* nombre_archivo) {
-    if (tablero_actual == nullptr) return;
-
-    std::ofstream archivo(nombre_archivo, std::ios::binary);
-
-    if (archivo.is_open()) {
-        archivo.write(reinterpret_cast<const char*>(tablero_actual), bytes_reservados);
-        archivo.close();
-    } else {
-        cout << "Error: No se pudo crear el archivo de respaldo.\n";
-    }
-}
-
-void leer_registro_historial(unsigned char* tablero_actual, size_t bytes_reservados, const char* nombre_archivo) {
-    if (tablero_actual == nullptr) return;
-
-    std::ifstream archivo(nombre_archivo, std::ios::binary);
-
-    if (archivo.is_open()) {
-        archivo.read(reinterpret_cast<char*>(tablero_actual), bytes_reservados);
-        archivo.close();
-    } else {
-        cout << "Error: No se encontro el archivo de respaldo para leer.\n";
-    }
-}
-
-
-
-// --- AGREGAR FILA O COLUMNA ---
 unsigned char* agregar_linea(unsigned char* tablero, int& filas, int& cols, size_t& bytes_reservados, int pos, bool es_fila) {
     int nuevas_filas = es_fila ? filas + 1 : filas;
     int nuevas_cols = es_fila ? cols : cols + 1;
@@ -234,7 +131,24 @@ unsigned char* agregar_linea(unsigned char* tablero, int& filas, int& cols, size
 }
 
 
-// --- DETECCIÓN DE COMBINACIONES (3 O MÁS IGUALES) ---
+void imprimir_tira_binaria(const unsigned char* tablero, size_t bytes_reservados, int filas, int cols) {
+    size_t bits_utilizados = filas * cols * 3;
+    cout << "Secuencia empaquetada en memoria (" << bytes_reservados << " bytes):\n";
+    for (size_t i = 0; i < bytes_reservados; ++i) {
+        cout << "Byte " << i << ": [";
+        for (int bit = 7; bit >= 0; --bit) {
+            size_t bit_global = (i * 8) + bit;
+            if (bit_global < bits_utilizados) {
+                cout << ((tablero[i] >> bit) & 1);
+            } else {
+                cout << ".";
+            }
+        }
+        cout << "] ";
+    }
+    cout << "\n\n";
+}
+
 bool detectar_y_marcar_combinaciones(const unsigned char* tablero, int filas, int cols, bool* eliminados) {
     bool hay_combos = false;
 
@@ -271,18 +185,67 @@ bool detectar_y_marcar_combinaciones(const unsigned char* tablero, int filas, in
     return hay_combos;
 }
 
+// CORRECCIÓN DE LA GRAVEDAD PARA EVITAR CLONACIONES EN EMBAJADA
+int aplicar_gravedad_y_relleno(unsigned char* tablero, int filas, int cols, const bool* eliminados) {
+    int total_eliminadas = 0;
+    for (int c = 0; c < cols; ++c) {
+        unsigned char* columna_temporal = new unsigned char[filas];
+        int pos_escribir = filas - 1;
 
-// --- ELIMINACIÓN MANUAL POR PARTE DEL JUGADOR ---
+        for (int f = filas - 1; f >= 0; --f) {
+            if (!eliminados[f * cols + c]) {
+                columna_temporal[pos_escribir] = obtener_ficha(tablero, f, c, cols);
+                pos_escribir--;
+            } else {
+                total_eliminadas++;
+            }
+        }
+
+        while (pos_escribir >= 0) {
+            columna_temporal[pos_escribir] = rand() % 6;
+            pos_escribir--;
+        }
+
+        for (int f = 0; f < filas; ++f) {
+            fijar_ficha(tablero, f, c, cols, columna_temporal[f]);
+        }
+        delete[] columna_temporal;
+    }
+    return total_eliminadas;
+}
+
+void procesar_cascadas(unsigned char* tablero, int filas, int cols, int& puntaje, int& total_fichas_destruidas, int& combinaciones, int& cascadas) {
+    int nivel_cascada = 0;
+    while (true) {
+        bool* eliminados = new bool[filas * cols]();
+        bool hay_combos = detectar_y_marcar_combinaciones(tablero, filas, cols, eliminados);
+
+        if (!hay_combos) {
+            delete[] eliminados;
+            break;
+        }
+
+        nivel_cascada++;
+        combinaciones++;
+        if (nivel_cascada > 1) cascadas++;
+
+        int destruidas = aplicar_gravedad_y_relleno(tablero, filas, cols, eliminados);
+        total_fichas_destruidas += destruidas;
+        puntaje += (destruidas * 10 * nivel_cascada);
+
+        delete[] eliminados;
+    }
+}
+
+
 void eliminar_ficha_usuario(unsigned char* tablero, int filas, int cols, int fila_sel, int col_sel, int& puntaje, int& total_fichas_destruidas, int& combinaciones, int& cascadas) {
     bool* eliminados = new bool[filas * cols]();
     eliminados[fila_sel * cols + col_sel] = true;
 
     aplicar_gravedad_y_relleno(tablero, filas, cols, eliminados);
     delete[] eliminados;
-
     procesar_cascadas(tablero, filas, cols, puntaje, total_fichas_destruidas, combinaciones, cascadas);
 }
-
 
 void mostrar_tablero(const unsigned char* tablero, int filas, int cols) {
     const char simbolos[] = {'A', 'B', 'C', 'D', 'E', 'F', ' ', '*'};
@@ -307,6 +270,35 @@ void mostrar_tablero(const unsigned char* tablero, int filas, int cols) {
     for (int i = 0; i < cols * 2; ++i) cout << "-";
     cout << "+\n\n";
 }
+
+void registrar_estado_memoria(const unsigned char* tablero_actual, size_t bytes_reservados, const char* nombre_archivo) {
+    if (tablero_actual == nullptr) return;
+
+    std::ofstream archivo(nombre_archivo, std::ios::binary);
+
+    if (archivo.is_open()) {
+        archivo.write(reinterpret_cast<const char*>(tablero_actual), bytes_reservados);
+        archivo.close();
+    } else {
+        cout << "Error: No se pudo crear el archivo de respaldo.\n";
+    }
+}
+
+void leer_registro_historial(unsigned char* tablero_actual, size_t bytes_reservados, const char* nombre_archivo) {
+    if (tablero_actual == nullptr) return;
+
+    std::ifstream archivo(nombre_archivo, std::ios::binary);
+
+    if (archivo.is_open()) {
+        archivo.read(reinterpret_cast<char*>(tablero_actual), bytes_reservados);
+        archivo.close();
+    } else {
+        cout << "Error: No se encontro el archivo de respaldo para leer.\n";
+    }
+}
+
+
+
 
 void exportar_reporte_bits(const unsigned char* tablero, size_t bytes_reservados, int filas, int cols, const char* nombre_archivo) {
     if (tablero == nullptr) return;
@@ -335,4 +327,46 @@ void exportar_reporte_bits(const unsigned char* tablero, size_t bytes_reservados
     } else {
         cout << "Error: No se pudo crear el reporte de texto.\n";
     }
+}
+
+bool guardar_partida_txt(const char* nombre_archivo, const unsigned char* tablero, int filas, int cols, size_t bytes_reservados, int puntaje, int elim_usr, int dest_fichas, int comb, int casc) {
+    std::ofstream archivo(nombre_archivo);
+    if (!archivo.is_open()) return false;
+
+    // 1. Encabezado con dimensiones y memoria reservada
+    archivo << filas << " " << cols << " " << bytes_reservados << "\n";
+
+    // 2. Estadísticas acumuladas
+    archivo << puntaje << " " << elim_usr << " " << dest_fichas << " " << comb << " " << casc << "\n";
+
+    // 3. Tira de bytes parseada a valores numéricos en texto
+    for (size_t i = 0; i < bytes_reservados; ++i) {
+        archivo << (int)tablero[i] << " ";
+    }
+    archivo << "\n";
+
+    archivo.close();
+    return true;
+}
+
+unsigned char* cargar_partida_txt(const char* nombre_archivo, int& filas, int& cols, size_t& bytes_reservados, int& puntaje, int& elim_usr, int& dest_fichas, int& comb, int& casc) {
+    std::ifstream archivo(nombre_archivo);
+    if (!archivo.is_open()) return nullptr;
+
+    // Leer encabezado
+    archivo >> filas >> cols >> bytes_reservados;
+    archivo >> puntaje >> elim_usr >> dest_fichas >> comb >> casc;
+
+    // Asignar memoria dinámica limpia para el nuevo puntero
+    unsigned char* nuevo_tablero = new unsigned char[bytes_reservados]();
+
+    // Parsear los números de texto directamente a los bytes del puntero
+    for (size_t i = 0; i < bytes_reservados; ++i) {
+        int val;
+        archivo >> val;
+        nuevo_tablero[i] = (unsigned char)val;
+    }
+
+    archivo.close();
+    return nuevo_tablero;
 }
